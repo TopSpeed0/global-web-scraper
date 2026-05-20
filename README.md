@@ -1,11 +1,13 @@
 # 🌐 Global Web Scraper
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![CloakBrowser](https://img.shields.io/badge/CloakBrowser-Stealth-green.svg)](https://github.com/nichochar/cloakbrowser)
-[![Scrapling](https://img.shields.io/badge/Scrapling-0.4.8-orange.svg)](https://github.com/D4Vinci/Scrapling)
-[![Playwright](https://img.shields.io/badge/Playwright-1.58-purple.svg)](https://playwright.dev/)
-[![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-red.svg)](https://openclaw.ai)
+[![GitHub release](https://img.shields.io/github/v/release/TopSpeed0/global-web-scraper?style=flat-square)](https://github.com/TopSpeed0/global-web-scraper/releases)
+[![License: MIT](https://img.shields.io/github/license/TopSpeed0/global-web-scraper?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![CloakBrowser](https://img.shields.io/badge/CloakBrowser-Stealth-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://github.com/nichochar/cloakbrowser)
+[![Scrapling](https://img.shields.io/badge/Scrapling-0.4.8-ff6600?style=flat-square)](https://github.com/D4Vinci/Scrapling)
+[![Playwright](https://img.shields.io/badge/Playwright-1.58-6B3FA0?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
+[![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-E34F26?style=flat-square)](https://openclaw.ai)
+[![Requirements](https://img.shields.io/badge/requirements-txt-brightgreen?style=flat-square)](requirements.txt)
 
 > Universal web scraper that automatically picks the best tool for the job — from simple HTTP fetch to full stealth browser automation.
 
