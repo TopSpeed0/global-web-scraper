@@ -18,7 +18,7 @@ Install the skill from https://github.com/TopSpeed0/global-web-scraper.git
 Or manually:
 ```bash
 git clone git@github.com:TopSpeed0/global-web-scraper.git ~/.openclaw/workspace/skills/web-scraper
-pip install cloakbrowser scrapling playwright
+pip install -r requirements.txt
 python3 -m cloakbrowser install  # downloads stealth Chromium (~200MB)
 npx playwright install chromium
 ```
@@ -119,6 +119,7 @@ web-scraper/
 ├── SKILL.md                      # OpenClaw skill definition
 ├── README.md                     # This file
 ├── LICENSE                       # MIT License
+├── requirements.txt              # Python dependencies
 ├── scripts/
 │   ├── cloak-scrape.py          # Universal CloakBrowser scraper
 │   └── scrapling-extract.py     # Fast Scrapling extractor
