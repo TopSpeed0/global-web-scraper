@@ -66,6 +66,74 @@ curl "https://serpapi.com/search.json?api_key=$SERPAPI_KEY&engine=google&q=QUERY
 | SerpAPI | ✅ (250/mo) | Google search snippets |
 | Brave Search | ✅ built-in | English web search |
 
+## 6. Login Flow — authenticated scraping with error classification
+Inspired by israeli-bank-scrapers. Handles: navigate → fill → submit → classify → optional API harvest.
+```bash
+# Basic login
+python3 scripts/login-flow.py "https://example.com/login" \
+  --field "#email=user@example.com" \
+  --field "#password=secret123" \
+  --submit "#login-btn" \
+  --success-url "/dashboard"
+
+# Login + harvest internal API after auth
+python3 scripts/login-flow.py "https://example.com/login" \
+  --field "#email=user@example.com" \
+  --field "#password=secret123" \
+  --submit "button[type=submit]" \
+  --success-url "/dashboard" \
+  --harvest "https://example.com/api/v1/data" \
+  --humanize
+
+# Save result to JSON
+python3 scripts/login-flow.py "https://example.com/login" \
+  --field "#user=admin" --field "#pass=1234" \
+  --submit ".submit" --success-selector ".welcome" \
+  --output result.json
+```
+
+### Login result classification
+Returns precise enum instead of true/false:
+| Result | Meaning |
+|---|---|
+| SUCCESS | Login successful |
+| INVALID_PASSWORD | Wrong credentials |
+| ACCOUNT_BLOCKED | Too many attempts / locked |
+| CHANGE_PASSWORD | Password expired |
+| CAPTCHA_REQUIRED | CAPTCHA/challenge detected |
+| TWO_FACTOR | 2FA code required |
+| RATE_LIMITED | 429 / too many requests |
+| CLOUDFLARE_BLOCKED | Anti-bot challenge |
+| TIMEOUT | Page didn't load |
+
+Supports Hebrew + English error patterns automatically.
+
+### Post-login API harvesting
+After successful login, harvest data from internal APIs using the authenticated session:
+- Auto-extracts XSRF/CSRF tokens from cookies
+- Executes `fetch()` within page context (session cookies sent automatically)
+- Returns JSON or text response
+- Much more reliable than DOM scraping for structured data
+
+### Python API (for scripting)
+```python
+from scripts.login_flow import login, harvest_api, LoginResult
+
+result, page, browser = login(
+    url="https://example.com/login",
+    fields=[("#email", "user@test.com"), ("#pass", "secret")],
+    submit_selector="button[type=submit]",
+    success_url="/dashboard",
+    humanize=True,
+    retries=2,
+)
+
+if result == LoginResult.SUCCESS:
+    data = harvest_api(page, "https://example.com/api/data")
+    print(data)
+    browser.close()
+```
+
 ## Quick reference scripts
 ```bash
 # Generic CloakBrowser scrape
@@ -76,11 +144,19 @@ python3 scripts/cloak-scrape.py "https://example.com" --text
 
 # Extract with CSS selector
 python3 scripts/cloak-scrape.py "https://example.com" --css ".product-card"
+
+# Login + scrape authenticated content
+python3 scripts/login-flow.py "https://site.com/login" \
+  --field "#user=me" --field "#pass=secret" \
+  --submit "#login" --success-url "/home" \
+  --harvest "https://site.com/api/data"
 ```
 
 ## Rules
 - **Always try web_fetch first** — it's fastest and cheapest
 - **If blocked** → CloakBrowser (binary stealth, most reliable)
 - **If need fast parsing** → Scrapling (no browser overhead)
+- **If need login** → login-flow.py with CloakBrowser stealth
 - **SerpAPI is limited** — 250/month, use sparingly
 - **Close browsers!** Server has 8GB RAM, don't leak browser processes
+- **Never store real credentials in scripts** — use env vars or prompt

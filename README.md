@@ -9,7 +9,7 @@
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-E34F26?style=flat-square)](https://openclaw.ai)
 [![Requirements](https://img.shields.io/badge/requirements-txt-brightgreen?style=flat-square)](requirements.txt)
 
-> Universal web scraper that automatically picks the best tool for the job — from simple HTTP fetch to full stealth browser automation.
+> Universal web scraper that automatically picks the best tool for the job — from simple HTTP fetch to full stealth browser automation. Now with **login flow automation**, **API harvesting**, and **error classification** inspired by israeli-bank-scrapers.
 
 ## ⚡ One-Prompt Install
 
