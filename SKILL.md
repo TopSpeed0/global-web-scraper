@@ -292,7 +292,7 @@ from playwright.sync_api import sync_playwright
 | web_fetch | ✅ built-in | Simple HTML pages |
 | CloakBrowser | ✅ 0.3.31 | Anti-bot (Cloudflare, yad2, CAPTCHAs) |
 | Scrapling | ✅ 0.4.8 | Fast CSS/XPath parsing |
-| Playwright | ✅ 1.59.0 | JS-rendered pages |
+| Playwright | ✅ 1.60.0 | JS-rendered pages |
 | Brave Search | ✅ built-in | English web search (default provider) |
 | SerpAPI | ✅ (250/mo) | Hebrew/Google search snippets |
 | Firecrawl | ⚙️ needs API key | Managed extraction, autonomous research |
@@ -311,8 +311,21 @@ python3 scripts/cloak-scrape.py "https://example.com" --text
 # Extract with CSS selector
 python3 scripts/cloak-scrape.py "https://example.com" --css ".product-card"
 
+# CloakBrowser with locale/timezone/humanize
+python3 scripts/cloak-scrape.py "https://example.com" --locale he-IL --timezone Asia/Jerusalem --humanize
+
+# CloakBrowser with persistent profile (stay logged in)
+python3 scripts/cloak-scrape.py "https://example.com" --profile ./my-profile --text
+
+# CloakBrowser with proxy + save output
+python3 scripts/cloak-scrape.py "https://example.com" --proxy socks5://proxy:1080 -o output.txt
+
 # Scrapling structured extraction
 python3 scripts/scrapling-extract.py "https://example.com" --css ".items"
+
+# Scrapling with stealth (httpx) or full browser
+python3 scripts/scrapling-extract.py "https://example.com" --stealth
+python3 scripts/scrapling-extract.py "https://example.com" --browser
 
 # Login + harvest API
 python3 scripts/login-flow.py "https://site.com/login" \
