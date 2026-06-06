@@ -23,16 +23,20 @@ def main():
     args = parser.parse_args()
 
     if args.browser:
-        from scrapling import PlayWrightFetcher
-        fetcher = PlayWrightFetcher()
+        from scrapling import DynamicFetcher
+        fetcher = DynamicFetcher()
     elif args.stealth:
-        from scrapling import StealthFetcher
-        fetcher = StealthFetcher()
+        from scrapling import StealthyFetcher
+        fetcher = StealthyFetcher()
     else:
         from scrapling import Fetcher
         fetcher = Fetcher()
 
-    page = fetcher.get(args.url)
+    # Fetcher uses .get(), StealthyFetcher/DynamicFetcher use .fetch()
+    if hasattr(fetcher, 'get'):
+        page = fetcher.get(args.url)
+    else:
+        page = fetcher.fetch(args.url)
 
     print(f"📄 Status: {page.status}")
     print(f"🔗 {args.url}\n")

@@ -152,19 +152,19 @@ ctx.close()  # cookies saved
 Fast structured extraction with CSS/XPath selectors. No browser overhead.
 
 ```python
-from scrapling import Fetcher, StealthFetcher, PlayWrightFetcher
+from scrapling import Fetcher, StealthyFetcher, DynamicFetcher
 
-# Simple fetch + parse
+# Simple fetch + parse (Fetcher uses .get())
 page = Fetcher().get(url)
 products = page.css('.product-card')
 for p in products:
     print(p.css_first('.title').text, p.css_first('.price').text)
 
-# With stealth (httpx-based, no browser)
-page = StealthFetcher().get(url)
+# With stealth — patchright-based, no CDP signals (uses .fetch())
+page = StealthyFetcher().fetch(url)
 
-# With full browser (Playwright-backed)
-page = PlayWrightFetcher().get(url)
+# With full browser — Playwright-backed (uses .fetch())
+page = DynamicFetcher().fetch(url)
 ```
 
 **When:** Need structured data extraction, CSS selectors, fast bulk parsing.

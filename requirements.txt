@@ -1,4 +1,6 @@
 cloakbrowser>=0.3.31
 scrapling>=0.4.8
 browserforge>=1.2.0
-playwright>=1.59.0
+playwright>=1.60.0
+patchright>=1.60.0
+msgspec>=0.21.0
