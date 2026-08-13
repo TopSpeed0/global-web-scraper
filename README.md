@@ -3,9 +3,9 @@
 [![GitHub release](https://img.shields.io/github/v/release/TopSpeed0/global-web-scraper?style=flat-square)](https://github.com/TopSpeed0/global-web-scraper/releases)
 [![License: MIT](https://img.shields.io/github/license/TopSpeed0/global-web-scraper?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![CloakBrowser](https://img.shields.io/badge/CloakBrowser-0.3.31-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://pypi.org/project/cloakbrowser/)
-[![Scrapling](https://img.shields.io/badge/Scrapling-0.4.8-ff6600?style=flat-square)](https://github.com/D4Vinci/Scrapling)
-[![Playwright](https://img.shields.io/badge/Playwright-1.60-6B3FA0?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
+[![CloakBrowser](https://img.shields.io/badge/CloakBrowser-0.5.7-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://pypi.org/project/cloakbrowser/)
+[![Scrapling](https://img.shields.io/badge/Scrapling-0.4.14-ff6600?style=flat-square)](https://github.com/D4Vinci/Scrapling)
+[![Playwright](https://img.shields.io/badge/Playwright-1.62-6B3FA0?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-E34F26?style=flat-square)](https://openclaw.ai)
 
 > Universal web scraper that picks the best tool for the job — from simple HTTP fetch to full stealth browser automation. Includes **login flow automation**, **API harvesting**, **error classification**, and support for **OpenClaw native providers** (Firecrawl, Tavily, Exa).
@@ -20,6 +20,7 @@ Or manually:
 ```bash
 git clone git@github.com:TopSpeed0/global-web-scraper.git ~/.openclaw/workspace/skills/web-scraper
 pip install -r requirements.txt
+python3 -m playwright install chromium
 python3 -m cloakbrowser install  # downloads stealth Chromium (~200MB)
 ```
 
@@ -29,7 +30,7 @@ python3 -m cloakbrowser install  # downloads stealth Chromium (~200MB)
 |-----------|-----------|---------|
 | **Python 3.10+** | ✅ Yes | `apt install python3` |
 | **CloakBrowser** | ✅ Yes | `pip install cloakbrowser && python3 -m cloakbrowser install` |
-| **Scrapling** | ✅ Yes | `pip install scrapling` |
+| **Scrapling** | ✅ Yes | `pip install "scrapling[fetchers]"` |
 | **Playwright** | ✅ Yes | `pip install playwright && python3 -m playwright install chromium` |
 | **Patchright** | ✅ Yes | `pip install patchright` (needed by Scrapling stealth) |
 | **Firecrawl API** | Optional | [firecrawl.dev](https://firecrawl.dev) — managed extraction + autonomous research |
@@ -204,3 +205,12 @@ MIT
 ---
 
 Made with ⚡ by [TopSpeed](https://github.com/TopSpeed0)
+
+## 2026-08 Upgrade
+
+- **CloakBrowser 0.5.7**: retained API compatibility; humanized behavior now reaches nested frames.
+- **Scrapling 0.4.14**: requires Python 3.10+ and uses safe redirects by default, protecting against redirects to private/loopback addresses.
+- **Playwright 1.62.0**: bundled Chromium is updated; run `python3 -m playwright install chromium` after dependency upgrades.
+- **Login flow**: adds `AUTOMATION_BLOCKED`, multi-signal success/change-password detection, selector retries, redacted diagnostics, and a same-origin guard for post-login API extraction.
+
+<!-- Updated 2026-08-13: v2.2.0 -->

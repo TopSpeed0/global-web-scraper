@@ -22,21 +22,23 @@ def main():
     parser.add_argument("--chars", type=int, default=10000, help="Max chars for full text (default 10000)")
     args = parser.parse_args()
 
+    # Scrapling 0.4.14 fetchers are used directly; constructor configuration
+    # is deprecated and emits warnings. Configure only when parser options are needed.
     if args.browser:
         from scrapling import DynamicFetcher
-        fetcher = DynamicFetcher()
+        fetcher = DynamicFetcher
     elif args.stealth:
         from scrapling import StealthyFetcher
-        fetcher = StealthyFetcher()
+        fetcher = StealthyFetcher
     else:
         from scrapling import Fetcher
-        fetcher = Fetcher()
+        fetcher = Fetcher
 
-    # Fetcher uses .get(), StealthyFetcher/DynamicFetcher use .fetch()
-    if hasattr(fetcher, 'get'):
-        page = fetcher.get(args.url)
-    else:
+    # Fetcher uses .get(), StealthyFetcher/DynamicFetcher use .fetch().
+    if args.browser or args.stealth:
         page = fetcher.fetch(args.url)
+    else:
+        page = fetcher.get(args.url)
 
     print(f"📄 Status: {page.status}")
     print(f"🔗 {args.url}\n")
