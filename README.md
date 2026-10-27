@@ -3,9 +3,9 @@
 [![GitHub release](https://img.shields.io/github/v/release/TopSpeed0/global-web-scraper?style=flat-square)](https://github.com/TopSpeed0/global-web-scraper/releases)
 [![License: MIT](https://img.shields.io/github/license/TopSpeed0/global-web-scraper?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![CloakBrowser](https://img.shields.io/badge/CloakBrowser-0.5.7-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://pypi.org/project/cloakbrowser/)
-[![Scrapling](https://img.shields.io/badge/Scrapling-0.4.14-ff6600?style=flat-square)](https://github.com/D4Vinci/Scrapling)
-[![Playwright](https://img.shields.io/badge/Playwright-1.62-6B3FA0?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
+[![CloakBrowser](https://img.shields.io/badge/CloakBrowser-0.6.4-2ea44f?style=flat-square&logo=googlechrome&logoColor=white)](https://pypi.org/project/cloakbrowser/)
+[![Scrapling](https://img.shields.io/badge/Scrapling-0.5-ff6600?style=flat-square)](https://github.com/D4Vinci/Scrapling)
+[![Playwright](https://img.shields.io/badge/Playwright-1.64.1-6B3FA0?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-E34F26?style=flat-square)](https://openclaw.ai)
 
 > Universal web scraper that picks the best tool for the job — from simple HTTP fetch to full stealth browser automation. Includes **login flow automation**, **API harvesting**, **error classification**, and support for **OpenClaw native providers** (Firecrawl, Tavily, Exa).
@@ -18,11 +18,17 @@ Install the skill from https://github.com/TopSpeed0/global-web-scraper.git
 
 Or manually:
 ```bash
-git clone git@github.com:TopSpeed0/global-web-scraper.git ~/.openclaw/workspace/skills/web-scraper
-pip install -r requirements.txt
-python3 -m playwright install chromium
-python3 -m cloakbrowser install  # downloads stealth Chromium (~200MB)
+git clone https://github.com/TopSpeed0/global-web-scraper.git ~/.openclaw/workspace/skills/web-scraper
+cd ~/.openclaw/workspace/skills/web-scraper
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m playwright install chromium
+.venv/bin/python -m patchright install chromium
+.venv/bin/python -m cloakbrowser install  # downloads stealth Chromium (~200MB)
 ```
+
+Run the helper scripts with `.venv/bin/python` (or activate it with `source .venv/bin/activate`) so project dependencies remain isolated.
 
 ## 📋 Prerequisites
 
@@ -132,10 +138,9 @@ data = page.inner_text("body")
 ctx.close()
 
 # Scrapling — fast parsing
-from scrapling import Fetcher, StealthyFetcher, DynamicFetcher
-page = Fetcher().get("https://example.com")  # simple
-page = StealthyFetcher().fetch("https://example.com")  # stealth
-page = DynamicFetcher().fetch("https://example.com")  # full browser
+from scrapling import Fetcher, StealthyFetcher
+page = Fetcher().get("https://example.com")  # simple HTTP extraction
+page = StealthyFetcher.fetch("https://example.com")  # Chromium-backed stealth
 items = page.css('.product-card')
 
 # Login flow
@@ -206,11 +211,12 @@ MIT
 
 Made with ⚡ by [TopSpeed](https://github.com/TopSpeed0)
 
-## 2026-08 Upgrade
+## 2026-10 Runtime Refresh
 
-- **CloakBrowser 0.5.7**: retained API compatibility; humanized behavior now reaches nested frames.
-- **Scrapling 0.4.14**: requires Python 3.10+ and uses safe redirects by default, protecting against redirects to private/loopback addresses.
-- **Playwright 1.62.0**: bundled Chromium is updated; run `python3 -m playwright install chromium` after dependency upgrades.
+- **CloakBrowser 0.6.4**: latest supported release; install its managed browser runtime before use.
+- **Scrapling 0.5**: requires Python 3.10+; `DynamicFetcher` was removed, so use `StealthyFetcher.fetch()` for browser-backed extraction.
+- **Playwright 1.64.1 / Patchright 1.64.3**: install each managed Chromium runtime after dependency upgrades.
 - **Login flow**: adds `AUTOMATION_BLOCKED`, multi-signal success/change-password detection, selector retries, redacted diagnostics, and a same-origin guard for post-login API extraction.
 
+<!-- Updated 2026-10-27: v2.3.0 — refreshed runtime pins and migrated Scrapling browser extraction to StealthyFetcher. -->
 <!-- Updated 2026-08-13: v2.2.0 -->

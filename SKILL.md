@@ -109,9 +109,8 @@ for card in page.css(".product-card"):
 Escalation within Scrapling:
 
 ```python
-from scrapling import StealthyFetcher, DynamicFetcher
-page = StealthyFetcher().fetch("https://example.com")  # basic evasion
-page = DynamicFetcher().fetch("https://example.com")   # browser-backed rendering
+from scrapling import StealthyFetcher
+page = StealthyFetcher.fetch("https://example.com")  # Chromium-backed rendering + stealth
 ```
 
 Use bounded concurrency, backoff for 429/5xx responses, and explicit selectors. Validate a sample before bulk extraction.
@@ -169,11 +168,12 @@ The login helper is for user-authorized workflows only. Supply credentials from 
 
 | Component | Pinned version | Notes |
 | --- | --- | --- |
-| CloakBrowser | 0.5.7 | `humanize` now propagates to nested frames; free-tier browser availability can require `cloakbrowser login`. |
-| Scrapling | 0.4.14 | Requires Python 3.10+; HTTP fetchers use safe redirects by default. |
-| Playwright | 1.62.0 | Run `python3 -m playwright install chromium` after upgrades. |
-| Patchright | 1.61.2 | Latest currently compatible release; use only when its CDP-evasion behavior is genuinely needed. |
+| CloakBrowser | 0.6.4 | Install the managed browser runtime before use; free-tier availability can require `cloakbrowser login`. |
+| Scrapling | 0.5 | Requires Python 3.10+; `DynamicFetcher` was removed, so use `StealthyFetcher.fetch()` for browser-backed extraction. |
+| Playwright | 1.64.1 | Run `python3 -m playwright install chromium` after upgrades. |
+| Patchright | 1.64.3 | Run `python3 -m patchright install chromium`; use only when its CDP-evasion behavior is genuinely needed. |
 
+<!-- Updated 2026-10-27: v2.3.0 — refreshed runtime pins; migrated Scrapling browser extraction from removed DynamicFetcher to StealthyFetcher. -->
 <!-- Updated 2026-08-13: v2.2.0 — refreshed CloakBrowser/Scrapling/Playwright pins; added resilient authorized-login outcomes (automation block, selector retry, multi-signal success/password-change detection, same-origin API harvesting, and redacted timing diagnostics). -->
 
 <!-- Updated 2026-08-13: v2.1.0 — aligns routing with current OpenClaw tools, adds managed Browser workflow and authenticated-session safeguards, removes assumptions that optional provider-specific tools are installed, and reinforces progressive escalation/rate-limit guidance. -->
