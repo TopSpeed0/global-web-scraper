@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><title>XHR</title></head><body>
+<ul id="rows"></ul>
+<script>
+setTimeout(function () {
+  fetch("data.json").then(function (r) { return r.json(); }).then(function (rows) {
+    rows.forEach(function (row) { var li = document.createElement("li"); li.className = "row"; li.textContent = row.name; document.getElementById("rows").appendChild(li); });
+  });
+}, 1000);
+</script>
+</body></html>
