@@ -7,7 +7,7 @@ description: >
   structured web extraction, JS-heavy pages, Cloudflare blocks, and site data collection.
   Triggers on "scrape", "extract data", "crawl", "Cloudflare", "blocked", "anti-bot",
   "web_fetch failed", and "can't access site".
-version: 2.2.0
+version: 2.4.0
 ---
 
 # Web Scraper — Universal
@@ -157,10 +157,24 @@ Before reporting extracted information:
 The repository provides these wrappers; test them with `--help` before first use:
 
 ```bash
-python3 scripts/cloak-scrape.py "https://example.com" --text
-python3 scripts/scrapling-extract.py "https://example.com" --css ".product-card"
+python3 scripts/cloak-scrape.py "https://example.com" --text --json
+python3 scripts/cloak-scrape.py "https://example.com" --css ".card" --wait-for ".card" --json
+python3 scripts/scrapling-extract.py "https://example.com" --css ".product-card" --json
 python3 scripts/login-flow.py "https://example.com/login" --help
 ```
+
+**Prefer `--json`.** Every script then prints one envelope: `ok`, `error_type`, `retryable`, `hint`, `status`, `retry_after`, `data`. Act on `error_type`, not on page text:
+
+| `error_type` | Do |
+| --- | --- |
+| `EMPTY_RESULT` | Page probably needs JavaScript: use `cloak-scrape.py` with `--wait-for`, or the OpenClaw Browser. Check the selector. |
+| `BLOCKED` / `HTTP_ERROR` 401/403 | Escalate to `cloak-scrape.py`. If already there, report the block; do not try to defeat it. |
+| `RATE_LIMITED` | Wait `retry_after` seconds (or minutes), then slow down. |
+| `TIMEOUT` / `NAVIGATION_ERROR` | Retry once; then report. |
+| `NOT_FOUND` | Fix the URL or search for it. |
+| Login types (`TWO_FACTOR`, `CAPTCHA_REQUIRED`, `INVALID_PASSWORD`, …) | Stop and ask the user. Never re-run `login-flow.py` automatically. |
+
+Use `--wait-for SELECTOR` (or `--wait-for-url`, `--wait-for-response`) instead of long fixed `--wait` values. Exit codes mirror `error_type`; see the README table.
 
 The login helper is for user-authorized workflows only. Supply credentials from an approved secret mechanism or user interaction—never as literals in source files.
 
@@ -173,6 +187,7 @@ The login helper is for user-authorized workflows only. Supply credentials from 
 | Playwright | 1.64.1 | Run `python3 -m playwright install chromium` after upgrades. |
 | Patchright | 1.64.3 | Run `python3 -m patchright install chromium`; use only when its CDP-evasion behavior is genuinely needed. |
 
+<!-- Updated 2026-11-20: v2.4.0 — helper scripts gain --json result envelope, error taxonomy with agent actions, readiness waits (--wait-for*), and 429/5xx retries; scrapling full-text fix. -->
 <!-- Updated 2026-10-27: v2.3.0 — refreshed runtime pins; migrated Scrapling browser extraction from removed DynamicFetcher to StealthyFetcher. -->
 <!-- Updated 2026-08-13: v2.2.0 — refreshed CloakBrowser/Scrapling/Playwright pins; added resilient authorized-login outcomes (automation block, selector retry, multi-signal success/password-change detection, same-origin API harvesting, and redacted timing diagnostics). -->
 

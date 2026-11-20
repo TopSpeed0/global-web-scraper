@@ -46,16 +46,20 @@ Run the helper scripts with `.venv/bin/python` (or activate it with `source .ven
 
 ## 🧠 Decision Tree
 
+Same routing as `SKILL.md`: choose the lightest tool that works, escalate on evidence.
+
 ```
-Need to scrape a URL?
-├── Simple page, no JS? ──────────────── web_fetch (built-in)
-├── web_fetch failed / JS-heavy? ──────── Firecrawl (managed, no local browser)
-├── Anti-bot / Cloudflare / CAPTCHA? ──── CloakBrowser (binary stealth)
-├── Need structured extraction? ────────── Scrapling (fast CSS/XPath parsing)
-├── Need login + authenticated data? ──── Login Flow (CloakBrowser + auth)
-├── Need search results? ─────────────── web_search / Exa / Tavily
-└── Need autonomous research? ─────────── Firecrawl Agent
+Need information from the web?
+├── Need discovery / candidate URLs? ───── web_search
+├── Have a simple public URL? ──────────── web_fetch
+├── Need JS, pagination or UI actions? ─── OpenClaw Browser
+├── Need structured CSS/XPath data? ────── Scrapling   (scripts/scrapling-extract.py)
+├── Blocked by anti-bot / Cloudflare? ──── CloakBrowser (scripts/cloak-scrape.py)
+└── Need a logged-in session? ──────────── Browser profile + explicit user authorization
+                                           (scripts/login-flow.py)
 ```
+
+Escalate when a script reports `EMPTY_RESULT` (page needs JavaScript) or `BLOCKED` / `HTTP_ERROR` 403 (anti-bot). See [Results and exit codes](#-results-and-exit-codes). Optional managed providers (Firecrawl, Tavily, Exa) are listed below.
 
 ## 🚀 Usage
 
@@ -70,6 +74,16 @@ python3 scripts/cloak-scrape.py "https://protected-site.com" --text
 
 # CSS selector extraction
 python3 scripts/cloak-scrape.py "https://protected-site.com" --css ".product-card"
+
+# Wait for the content instead of a fixed 5 s pause
+python3 scripts/cloak-scrape.py "https://site.com/search" --css ".result" --wait-for ".result"
+
+# Wait for the SPA's data request, or for a redirect to finish
+python3 scripts/cloak-scrape.py "https://site.com/app" --text --wait-for-response "/api/"
+python3 scripts/cloak-scrape.py "https://site.com/go" --text --wait-for-url "/landing"
+
+# Machine-readable result envelope (see "Results and exit codes")
+python3 scripts/cloak-scrape.py "https://site.com" --text --json
 
 # Hebrew site with locale + timezone
 python3 scripts/cloak-scrape.py "https://yad2.co.il" --locale he-IL --timezone Asia/Jerusalem
@@ -87,6 +101,8 @@ python3 scripts/cloak-scrape.py "https://site.com" --profile ./my-profile
 python3 scripts/cloak-scrape.py "https://site.com" --proxy socks5://proxy:1080 -o output.txt
 ```
 
+Readiness flags: `--wait-for SELECTOR`, `--wait-for-url REGEX`, `--wait-for-response REGEX`, all bounded by `--timeout MS` (default 30000). Without any of them the old fixed `--wait 5000` still applies; with one, `--wait` defaults to 0. Navigation retries on HTTP 429/5xx (`--retries`, default 1, honouring `Retry-After` up to 30 s) but never reloads an anti-bot challenge page; a challenge gets up to 20 s to clear by itself before the run reports `BLOCKED`.
+
 ### Scrapling — Fast parsing (no browser overhead)
 
 ```bash
@@ -99,9 +115,17 @@ python3 scripts/scrapling-extract.py "https://example.com" --css ".product-card"
 # Stealth mode (patchright-based, no CDP signals)
 python3 scripts/scrapling-extract.py "https://example.com" --stealth
 
-# Full browser mode (Playwright-backed)
+# Full browser mode (alias of --stealth since Scrapling 0.5)
 python3 scripts/scrapling-extract.py "https://example.com" --browser
+
+# Browser mode, wait for content
+python3 scripts/scrapling-extract.py "https://example.com" --stealth --wait-for ".product-card"
+
+# Result envelope
+python3 scripts/scrapling-extract.py "https://example.com" --css ".product-card" --json
 ```
+
+`--retries N` retries HTTP 429/5xx (default 1). `--timeout MS` bounds the request.
 
 ### Login Flow — Authenticated scraping with error classification
 
@@ -123,7 +147,51 @@ python3 scripts/login-flow.py "https://example.com/login" \
   --humanize
 ```
 
-Login result classification: `SUCCESS`, `INVALID_PASSWORD`, `ACCOUNT_BLOCKED`, `CAPTCHA_REQUIRED`, `TWO_FACTOR`, `RATE_LIMITED`, `CLOUDFLARE_BLOCKED`, `TIMEOUT`.
+Login result classification: `SUCCESS`, `INVALID_PASSWORD`, `ACCOUNT_BLOCKED`, `CHANGE_PASSWORD`, `CAPTCHA_REQUIRED`, `TWO_FACTOR`, `RATE_LIMITED`, `AUTOMATION_BLOCKED`, `CLOUDFLARE_BLOCKED`, `TIMEOUT`, `UNKNOWN_ERROR`. With `--json` the result becomes the envelope's `error_type`; field values are never printed.
+
+> The examples above show literal values for brevity. Never put a real password on the command line: it lands in shell history and the process list.
+
+## 📦 Results and exit codes
+
+Every script accepts `--json` and then prints one envelope:
+
+```json
+{
+  "ok": false,
+  "error_type": "RATE_LIMITED",
+  "retryable": true,
+  "message": "RATE_LIMITED at https://site.com/search",
+  "hint": "Wait for retry_after seconds (or a few minutes) before retrying. Slow down.",
+  "url": "https://site.com/search",
+  "final_url": "https://site.com/search",
+  "status": 429,
+  "title": "Too Many Requests",
+  "retry_after": 30.0,
+  "elapsed_ms": 812,
+  "tool": "scrapling-extract",
+  "data": null
+}
+```
+
+`data` holds `{"text", "truncated"}`, `{"html", "truncated"}` or `{"selector", "count", "items"}`. Without `--json` the scripts print as before, and failures go to stderr as `ERROR <type>: <message>` plus a hint. The exit code is set either way:
+
+| Exit | `error_type` | Meaning | Retryable |
+|---|---|---|---|
+| 0 | — | Success | — |
+| 1 | `UNKNOWN_ERROR` | Unclassified failure | no |
+| 2 | `INVALID_ARGUMENT` | Bad arguments (also argparse usage errors) | no |
+| 3 | `EMPTY_RESULT` | Selector matched nothing / no text. The page may need JavaScript. | no |
+| 4 | `NOT_FOUND` | HTTP 404/410 | no |
+| 5 | `HTTP_ERROR` | Other HTTP ≥ 400 | 5xx only |
+| 6 | `RATE_LIMITED` | HTTP 429 (`retry_after` filled when sent) | yes |
+| 7 | `BLOCKED`, `CLOUDFLARE_BLOCKED`, `AUTOMATION_BLOCKED` | Anti-bot challenge page | no |
+| 8 | `TIMEOUT` | Page or awaited element too slow | yes |
+| 9 | `NAVIGATION_ERROR` | DNS / connection failure | yes |
+| 11 | `INVALID_PASSWORD`, `ACCOUNT_BLOCKED`, `CHANGE_PASSWORD`, `CAPTCHA_REQUIRED`, `TWO_FACTOR` | Login needs the user | no |
+
+`login-flow.py` marks every failure as not retryable: re-running it re-submits credentials.
+
+Challenge pages are detected from the page title and structural markers (for example `cf-browser-verification`), never from prose, so a "Performance & security by Cloudflare" footer is not a block.
 
 ### Python API
 
@@ -143,7 +211,7 @@ page = Fetcher().get("https://example.com")  # simple HTTP extraction
 page = StealthyFetcher.fetch("https://example.com")  # Chromium-backed stealth
 items = page.css('.product-card')
 
-# Login flow
+# Login flow (run from the repository root)
 from scripts.login_flow import login, harvest_api, LoginResult
 result, page, browser = login(
     url="https://example.com/login",
@@ -189,12 +257,25 @@ web-scraper/
 ├── README.md                     # This file
 ├── LICENSE                       # MIT
 ├── requirements.txt              # Python dependencies
+├── requirements-dev.txt          # + pytest
 ├── scripts/
 │   ├── cloak-scrape.py          # CloakBrowser universal scraper
 │   ├── scrapling-extract.py     # Scrapling fast extractor
-│   └── login-flow.py            # Login automation + API harvesting
-└── references/                   # Site-specific notes
+│   ├── login-flow.py            # CLI entry point for login_flow.py
+│   ├── login_flow.py            # Login automation + API harvesting (importable)
+│   └── scrape_core.py           # Checked navigation, readiness waits, result envelope
+└── tests/                        # Offline tests against a local fixture server
 ```
+
+## 🧪 Tests
+
+```bash
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pytest tests                       # offline: core + Scrapling CLI
+RUN_BROWSER_TESTS=1 .venv/bin/python -m pytest tests   # also CloakBrowser CLI tests
+```
+
+All tests run against `127.0.0.1` fixtures; no internet and no credentials needed.
 
 ## ⚠️ Important Notes
 
@@ -211,6 +292,13 @@ MIT
 
 Made with ⚡ by [TopSpeed](https://github.com/TopSpeed0)
 
+## 2026-11 Reliability Update (v2.4.0)
+
+- **Fixed:** `scrapling-extract.py` full-text mode printed nothing (it read only the body's direct text); emoji output crashed non-UTF-8 consoles; `cloak-scrape.py -o` wrote with the system encoding; the documented Python import of the login flow failed.
+- **Readiness waits:** `--wait-for`, `--wait-for-url`, `--wait-for-response` replace the fixed 5 s pause when given; navigation retries 429/5xx and honours `Retry-After`.
+- **Result envelope:** `--json` on every script, a shared error taxonomy, and distinct exit codes. HTTP errors no longer exit 0.
+- Patterns adapted from [eshaham/israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) (MIT): status-checked navigation with retries, readiness helpers, and results returned instead of thrown.
+
 ## 2026-10 Runtime Refresh
 
 - **CloakBrowser 0.6.4**: latest supported release; install its managed browser runtime before use.
@@ -218,5 +306,6 @@ Made with ⚡ by [TopSpeed](https://github.com/TopSpeed0)
 - **Playwright 1.64.1 / Patchright 1.64.3**: install each managed Chromium runtime after dependency upgrades.
 - **Login flow**: adds `AUTOMATION_BLOCKED`, multi-signal success/change-password detection, selector retries, redacted diagnostics, and a same-origin guard for post-login API extraction.
 
+<!-- Updated 2026-11-20: v2.4.0 — scrapling full-text fix, readiness waits, status retries, --json result envelope and exit codes, offline tests. -->
 <!-- Updated 2026-10-27: v2.3.0 — refreshed runtime pins and migrated Scrapling browser extraction to StealthyFetcher. -->
 <!-- Updated 2026-08-13: v2.2.0 -->
